@@ -1,5 +1,7 @@
 import requests
 import time
+import json
+from database import MangaDatabase
 
 url = "https://graphql.anilist.co"
 
@@ -67,4 +69,11 @@ while True:
         break
     time.sleep(1)
 
-print(len(all_manga))
+with open('manga.json', 'w', encoding='utf-8') as f:
+    json.dump(all_manga, f, ensure_ascii=False, indent=4)
+
+print(f"Pobrano {len(all_manga)} mang. Zapisywanie do bazy sqlite...")
+db = MangaDatabase()
+db.insert_many(all_manga)
+db.close()
+print("Gotowe!")
