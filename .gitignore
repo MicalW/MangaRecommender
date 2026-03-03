@@ -419,3 +419,16 @@ FodyWeavers.xsd
 
 #venv
 *.venv
+
+# Database
+*.db
+
+# Embeddings
+*.npy
+
+# Local JSON data
+*.json
+
+# Python cache
+__pycache__/
+*.pyc
