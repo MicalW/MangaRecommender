@@ -21,6 +21,7 @@ query ($id: Int, $page: Int, $perPage: Int) {
             genres
             tags {
                 name
+                rank
             }
             coverImage {
                 large
