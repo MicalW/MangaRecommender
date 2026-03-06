@@ -100,12 +100,11 @@ class MangaDatabase:
             self.cursor.execute('SELECT id FROM genres WHERE name = ?', (genre,))
             genre_id = self.cursor.fetchone()[0]
             self.cursor.execute('INSERT OR IGNORE INTO manga_genres (manga_id, genre_id) VALUES (?, ?)', (manga_id, genre_id))
-        
-        self.conn.commit()
 
     def insert_many(self, manga_list):
         for manga in manga_list:
             self.insert_manga(manga)
+        self.conn.commit()
 
     def close(self):
         self.conn.close()
@@ -124,8 +123,9 @@ class MangaDatabase:
 
     DB_PATH = "manga.db"
 
+    @staticmethod
     def get_connection():
-        return sqlite3.connect(DB_PATH)
+        return sqlite3.connect(MangaDatabase.DB_PATH)
 
 # Przykładowe użycie (gdy odpalimy plik bezpośrednio)
 if __name__ == '__main__':

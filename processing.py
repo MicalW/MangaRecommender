@@ -2,7 +2,6 @@ import json
 import html
 import re
 from collections import Counter
-import numpy as np
 from database.database import MangaDatabase
 
 def clean_text(text: str) -> str:
@@ -15,11 +14,11 @@ def clean_text(text: str) -> str:
 
     return final_text[0].strip()
 
-def clean_description_from_HTML(manga) -> str:
+def clean_description_from_html(manga) -> str:
     description = clean_text(manga.get("description", "")) or "No description available."
     return description
 
-def remove_tags_with_low_count(manga_data:dict, min_count:int) -> dict:
+def remove_tags_with_low_count(manga_data: list, min_count: int) -> set:
     all_tags = [tag["name"] for manga in manga_data for tag in manga.get("tags", [])]
     tag_counts = Counter(all_tags)
     popular_tags = {tag for tag, count in tag_counts.items() if count >= min_count}
@@ -34,7 +33,7 @@ if __name__ == '__main__':
     popular_tags = remove_tags_with_low_count(manga_data, 40)
 
     for manga in manga_data:
-        manga["description"] = clean_description_from_HTML(manga)
+        manga["description"] = clean_description_from_html(manga)
         manga["tags"] = [
         t for t in manga.get("tags", [])
         if t["name"] in popular_tags

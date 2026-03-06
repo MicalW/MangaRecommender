@@ -1,6 +1,4 @@
 import json
-import html
-import re
 from collections import Counter
 from sentence_transformers import SentenceTransformer
 import numpy as np
@@ -16,19 +14,18 @@ def text_builder(manga: dict, popular_tags: set) -> str:
     genres = ", ".join(manga.get("genres", []))
     return f"ID: {manga_id}\nTitle: {title_english} ({title_romaji})\nDescription: {description}\nTags: {tags}\nGenres: {genres}"
 
-with open("manga.json", "r", encoding="utf-8") as f:
-    manga_data = json.load(f)
-all_tags = [tag["name"] for manga in manga_data for tag in manga.get("tags", [])]
-tag_counts = Counter(all_tags)
-popular_tags = {tag for tag, count in tag_counts.items() if count >= 40}
-manga_preembedding = [text_builder(manga, popular_tags) for manga in manga_data]
-
-db = MangaDatabase()
-db.insert_many(manga_data)
-
-print(db.get_all_manga())
-db.close()
-print("Gotowe!")
+if __name__ == "__main__":
+    with open("manga.json", "r", encoding="utf-8") as f:
+        manga_data = json.load(f)
+    all_tags = [tag["name"] for manga in manga_data for tag in manga.get("tags", [])]
+    tag_counts = Counter(all_tags)
+    popular_tags = {tag for tag, count in tag_counts.items() if count >= 40}
+    manga_preembedding = [text_builder(manga, popular_tags) for manga in manga_data]
+    db = MangaDatabase()
+    db.insert_many(manga_data)
+    print(db.get_all_manga())
+    db.close()
+    print("Gotowe!")
 
 
 
