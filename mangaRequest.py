@@ -1,7 +1,7 @@
 import requests
 import time
 import json
-from database import MangaDatabase
+from database.database import MangaDatabase
 
 url = "https://graphql.anilist.co"
 
