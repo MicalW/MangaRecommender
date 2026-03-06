@@ -18,7 +18,7 @@ def clean_description_from_html(manga) -> str:
     description = clean_text(manga.get("description", "")) or "No description available."
     return description
 
-def remove_tags_with_low_count(manga_data: list, min_count: int) -> set:
+def get_popular_tags(manga_data: list, min_count: int) -> set:
     all_tags = [tag["name"] for manga in manga_data for tag in manga.get("tags", [])]
     tag_counts = Counter(all_tags)
     popular_tags = {tag for tag, count in tag_counts.items() if count >= min_count}
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     with open("manga.json", "r", encoding="utf-8") as f:
         manga_data = json.load(f)
 
-    popular_tags = remove_tags_with_low_count(manga_data, 40)
+    popular_tags = get_popular_tags(manga_data, 40)
 
     for manga in manga_data:
         manga["description"] = clean_description_from_html(manga)

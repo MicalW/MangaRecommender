@@ -85,21 +85,29 @@ class MangaDatabase:
             
             # Wstaw tag jeśli nie istnieje
             self.cursor.execute('INSERT OR IGNORE INTO tags (name) VALUES (?)', (tag_name,))
-            
-            # Pobierz ID taga
-            self.cursor.execute('SELECT id FROM tags WHERE name = ?', (tag_name,))
-            tag_id = self.cursor.fetchone()[0]
-            
+            # Pobierz ID taga: użyj lastrowid, a jeśli INSERT został zignorowany, wykonaj SELECT
+            tag_id = self.cursor.lastrowid
+            if not tag_id:
+                self.cursor.execute('SELECT id FROM tags WHERE name = ?', (tag_name,))
+                tag_id = self.cursor.fetchone()[0]
             # Połącz mangę z tagiem w tabeli łączącej
-            self.cursor.execute('INSERT OR IGNORE INTO manga_tags (manga_id, tag_id, rank) VALUES (?, ?, ?)', (manga_id, tag_id, tag_rank))
-
+            self.cursor.execute(
+                'INSERT OR IGNORE INTO manga_tags (manga_id, tag_id, rank) VALUES (?, ?, ?)',
+                (manga_id, tag_id, tag_rank),
+            )
         # 3. Obsługa gatunków
         genres_list = manga_data.get('genres') or []
         for genre in genres_list:
             self.cursor.execute('INSERT OR IGNORE INTO genres (name) VALUES (?)', (genre,))
-            self.cursor.execute('SELECT id FROM genres WHERE name = ?', (genre,))
-            genre_id = self.cursor.fetchone()[0]
-            self.cursor.execute('INSERT OR IGNORE INTO manga_genres (manga_id, genre_id) VALUES (?, ?)', (manga_id, genre_id))
+            # Pobierz ID gatunku: użyj lastrowid, a jeśli INSERT został zignorowany, wykonaj SELECT
+            genre_id = self.cursor.lastrowid
+            if not genre_id:
+                self.cursor.execute('SELECT id FROM genres WHERE name = ?', (genre,))
+                genre_id = self.cursor.fetchone()[0]
+            self.cursor.execute(
+                'INSERT OR IGNORE INTO manga_genres (manga_id, genre_id) VALUES (?, ?)',
+                (manga_id, genre_id),
+            )
 
     def insert_many(self, manga_list):
         for manga in manga_list:

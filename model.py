@@ -21,12 +21,6 @@ if __name__ == "__main__":
     tag_counts = Counter(all_tags)
     popular_tags = {tag for tag, count in tag_counts.items() if count >= 40}
     manga_preembedding = [text_builder(manga, popular_tags) for manga in manga_data]
-    db = MangaDatabase()
-    db.insert_many(manga_data)
-    print(db.get_all_manga())
-    db.close()
-    print("Gotowe!")
-
 
 
 
