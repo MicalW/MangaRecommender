@@ -1,12 +1,13 @@
 import sqlite3
 
 class MangaDatabase:
-    def __init__(self, db_path='manga.db'):
+    def __init__(self, db_path='data/manga.db'):
         self.conn = sqlite3.connect(db_path)
         # Włączenie obsługi kluczy obcych (wymagane dla ON DELETE CASCADE)
         self.conn.execute('PRAGMA foreign_keys = ON;')
         self.cursor = self.conn.cursor()
         self.create_table()
+
 
     def create_table(self):
         self.cursor.execute('''
@@ -127,6 +128,18 @@ class MangaDatabase:
 
     def get_all_manga_tags(self):
         self.cursor.execute('SELECT * FROM manga_tags')
+        return self.cursor.fetchall()
+    def get_genres_for_manga(self):
+        self.cursor.execute('SELECT m.id, g.name FROM manga m JOIN manga_genres mg ON m.id = mg.manga_id JOIN genres g ON g.id = mg.genre_id')
+        return self.cursor.fetchall()
+    def get_tags_for_manga(self):
+        self.cursor.execute('SELECT m.id, t.name FROM manga m JOIN manga_tags mt ON m.id = mt.manga_id JOIN tags t ON t.id = mt.tag_id')
+        return self.cursor.fetchall()
+    def get_tags_for_manga_with_rank(self):
+        self.cursor.execute('SELECT m.id, t.name, mt.rank FROM manga m JOIN manga_tags mt ON m.id = mt.manga_id JOIN tags t ON t.id = mt.tag_id')
+        return self.cursor.fetchall()
+    def get_description_for_manga(self):
+        self.cursor.execute('SELECT m.id, m.description FROM manga m')
         return self.cursor.fetchall()
 
     DB_PATH = "manga.db"
