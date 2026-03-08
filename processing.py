@@ -45,7 +45,7 @@ def build_manga_embedding(model, manga_genre_dict: dict, manga_tag_dict: dict, m
     tag_embeddings = model.encode(list(manga_tag_dict.values()), batch_size=32, show_progress_bar=True)
     description_embeddings = model.encode(list(manga_description_dict.values()), batch_size=32, show_progress_bar=True)
     ids = list(manga_genre_dict.keys())
-    np.savez("embeddings.npz", ids=ids, genre_embeddings=genre_embeddings, tag_embeddings=tag_embeddings, description_embeddings=description_embeddings)
+    np.savez("data/embeddings.npz", ids=ids, genre_embeddings=genre_embeddings, tag_embeddings=tag_embeddings, description_embeddings=description_embeddings)
     
     
 
@@ -85,9 +85,3 @@ if __name__ == '__main__':
 
     model = SentenceTransformer("all-MiniLM-L6-v2")
     build_manga_embedding(model, manga_genres_concatenated, manga_tags_concatenated, manga_descriptions_concatenated)
-
-
-    
-    # print(manga_genres)
-    # print(manga_tags)
-    # print(manga_descriptions)

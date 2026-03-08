@@ -142,6 +142,19 @@ class MangaDatabase:
         self.cursor.execute('SELECT m.id, m.description FROM manga m')
         return self.cursor.fetchall()
 
+    def create_user_table(self):
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS user_likes (manga_id INTEGER PRIMARY KEY)")
+        self.conn.commit()
+    def add_user_like(self, manga_id):
+        self.cursor.execute("INSERT OR IGNORE INTO user_likes (manga_id) VALUES (?)", (manga_id,))
+        self.conn.commit()
+    def get_user_likes(self):
+        self.cursor.execute("SELECT manga_id FROM user_likes")
+        return [row[0] for row in self.cursor.fetchall()]
+    def clear_user_likes(self):
+        self.cursor.execute("DELETE FROM user_likes")
+        self.conn.commit()
+
     DB_PATH = "manga.db"
 
     @staticmethod
@@ -151,6 +164,8 @@ class MangaDatabase:
 # Przykładowe użycie (gdy odpalimy plik bezpośrednio)
 if __name__ == '__main__':
     db = MangaDatabase()
+    # db.create_user_table()
     print("Database connection opened and table checked/created.")
     # db.insert_manga({"id": 1, ...})
+    db.clear_user_likes()
     db.close()
