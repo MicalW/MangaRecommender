@@ -1,4 +1,8 @@
-import json
+import sys
+import os
+from pathlib import Path
+# Add project root to sys.path
+sys.path.append(str(Path(__file__).parent.parent))
 import html
 import re
 import numpy as np
@@ -26,7 +30,7 @@ def get_popular_tags(manga_data: list, min_count: int) -> set:
     popular_tags = {tag for tag, count in tag_counts.items() if count >= min_count}
     return popular_tags
 
-def build_features_for_manga(manga_id: int, manga_features: dict, bool_rank: bool) -> list:
+def build_features_for_manga(manga_id: int, manga_features: dict, bool_rank: bool) -> str:
     if(bool_rank):
         features = []
 
@@ -63,7 +67,8 @@ if __name__ == '__main__':
     for manga_id, tag, rank in db.get_tags_for_manga_with_rank():
         manga_tags.setdefault(manga_id, []).append((tag, rank))
     for manga_id, description in db.get_description_for_manga():
-        manga_descriptions_concatenated[manga_id] = description
+        cleaned_description = clean_text(description or "") or "No description available."
+        manga_descriptions_concatenated[manga_id] = cleaned_description
     
     db.close()
     print("Gotowe!")

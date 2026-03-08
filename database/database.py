@@ -142,6 +142,10 @@ class MangaDatabase:
         self.cursor.execute('SELECT m.id, m.description FROM manga m')
         return self.cursor.fetchall()
 
+    def get_manga_by_id(self, manga_id):
+        self.cursor.execute('SELECT title_romaji, title_english FROM manga WHERE id = ?', (manga_id,))
+        return self.cursor.fetchone()
+
     def create_user_table(self):
         self.cursor.execute("CREATE TABLE IF NOT EXISTS user_likes (manga_id INTEGER PRIMARY KEY)")
         self.conn.commit()

@@ -1,7 +1,11 @@
-import json
-from collections import Counter
-from sentence_transformers import SentenceTransformer, util
+import sys
+import os
+from pathlib import Path
+# Add project root to sys.path
+sys.path.append(str(Path(__file__).parent.parent))
+
 import numpy as np
+from sentence_transformers import SentenceTransformer, util
 from database.database import MangaDatabase
 
 def add_manga(user_embedding, n, manga_embedding):
@@ -17,9 +21,20 @@ def add_like_and_get_new_recommendations(new_manga_id, liked_ids, ids, desc_embe
     db.add_user_like(new_manga_id)
     db.close()
 
-    print(liked_ids)
+    print(f"Adding {new_manga_id} to liked IDs: {liked_ids}")
+    
+    # Safely find indices only for IDs present in the dataset
+    idx = []
+    for mid in liked_ids:
+        where_res = np.where(ids == mid)[0]
+        if len(where_res) > 0:
+            idx.append(where_res[0])
+        else:
+            print(f"Warning: Manga ID {mid} not found in dataset.")
 
-    idx = [np.where(ids == mid)[0][0] for mid in liked_ids]
+    if not idx:
+        print("Error: No valid liked manga IDs found in dataset.")
+        return np.array([])
     new_user_profile_desc = np.mean(desc_embeddings_norm[idx], axis=0)
     new_user_profile_tag = np.mean(tag_embeddings_norm[idx], axis=0)
     new_user_profile_genre = np.mean(genre_embeddings_norm[idx], axis=0)
@@ -71,19 +86,20 @@ if __name__ == "__main__":
     #     user_tag_embedding = np.zeros(384)
     #     user_genre_embedding = np.zeros(384)
 
-    description_embeddings_norm = description_embeddings / np.linalg.norm(description_embeddings, axis=1, keepdims=True)
-    genre_embeddings_norm = genre_embeddings / np.linalg.norm(genre_embeddings, axis=1, keepdims=True)
-    tag_embeddings_norm = tag_embeddings / np.linalg.norm(tag_embeddings, axis=1, keepdims=True)
-
-    w_tag = 0.5
-    w_desc = 0.3
-    w_genre = 0.2
+    description_embeddings_norm = description_embeddings / (np.linalg.norm(description_embeddings, axis=1, keepdims=True) + 1e-9)
+    genre_embeddings_norm = genre_embeddings / (np.linalg.norm(genre_embeddings, axis=1, keepdims=True) + 1e-9)
+    tag_embeddings_norm = tag_embeddings / (np.linalg.norm(tag_embeddings, axis=1, keepdims=True) + 1e-9)
     
     sorted_indices = add_like_and_get_new_recommendations(30564, user_liked_manga_ids, ids, description_embeddings_norm, tag_embeddings_norm, genre_embeddings_norm)
-
-    top_1_id = ids[sorted_indices[0]]
-    print(top_1_id)
+    top_1_id = int(ids[sorted_indices[0]])
+    db = MangaDatabase()
+    manga_info = db.get_manga_by_id(top_1_id)
+    db.close()
+    print(f"Top 1 Recommendation: {manga_info} (ID: {top_1_id})")
 
     sorted_indices = add_like_and_get_new_recommendations(30028, user_liked_manga_ids, ids, description_embeddings_norm, tag_embeddings_norm, genre_embeddings_norm)
-    top_1_id = ids[sorted_indices[0]]
-    print(top_1_id)
+    top_1_id = int(ids[sorted_indices[0]])
+    db = MangaDatabase()
+    manga_info = db.get_manga_by_id(top_1_id)
+    db.close()
+    print(f"Top 1 Recommendation after adding more: {manga_info} (ID: {top_1_id})")

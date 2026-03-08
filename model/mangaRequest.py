@@ -1,3 +1,9 @@
+import sys
+import os
+from pathlib import Path
+# Add project root to sys.path
+sys.path.append(str(Path(__file__).parent.parent))
+
 import requests
 import time
 import json
