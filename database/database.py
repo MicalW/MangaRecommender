@@ -1,12 +1,13 @@
 import sqlite3
 
 class MangaDatabase:
-    def __init__(self, db_path='manga.db'):
+    def __init__(self, db_path='data/manga.db'):
         self.conn = sqlite3.connect(db_path)
         # Włączenie obsługi kluczy obcych (wymagane dla ON DELETE CASCADE)
         self.conn.execute('PRAGMA foreign_keys = ON;')
         self.cursor = self.conn.cursor()
         self.create_table()
+
 
     def create_table(self):
         self.cursor.execute('''
@@ -128,6 +129,35 @@ class MangaDatabase:
     def get_all_manga_tags(self):
         self.cursor.execute('SELECT * FROM manga_tags')
         return self.cursor.fetchall()
+    def get_genres_for_manga(self):
+        self.cursor.execute('SELECT m.id, g.name FROM manga m JOIN manga_genres mg ON m.id = mg.manga_id JOIN genres g ON g.id = mg.genre_id')
+        return self.cursor.fetchall()
+    def get_tags_for_manga(self):
+        self.cursor.execute('SELECT m.id, t.name FROM manga m JOIN manga_tags mt ON m.id = mt.manga_id JOIN tags t ON t.id = mt.tag_id')
+        return self.cursor.fetchall()
+    def get_tags_for_manga_with_rank(self):
+        self.cursor.execute('SELECT m.id, t.name, mt.rank FROM manga m JOIN manga_tags mt ON m.id = mt.manga_id JOIN tags t ON t.id = mt.tag_id')
+        return self.cursor.fetchall()
+    def get_description_for_manga(self):
+        self.cursor.execute('SELECT m.id, m.description FROM manga m')
+        return self.cursor.fetchall()
+
+    def get_manga_by_id(self, manga_id):
+        self.cursor.execute('SELECT title_romaji, title_english FROM manga WHERE id = ?', (manga_id,))
+        return self.cursor.fetchone()
+
+    def create_user_table(self):
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS user_likes (manga_id INTEGER PRIMARY KEY)")
+        self.conn.commit()
+    def add_user_like(self, manga_id):
+        self.cursor.execute("INSERT OR IGNORE INTO user_likes (manga_id) VALUES (?)", (manga_id,))
+        self.conn.commit()
+    def get_user_likes(self):
+        self.cursor.execute("SELECT manga_id FROM user_likes")
+        return [row[0] for row in self.cursor.fetchall()]
+    def clear_user_likes(self):
+        self.cursor.execute("DELETE FROM user_likes")
+        self.conn.commit()
 
     DB_PATH = "manga.db"
 
@@ -138,6 +168,8 @@ class MangaDatabase:
 # Przykładowe użycie (gdy odpalimy plik bezpośrednio)
 if __name__ == '__main__':
     db = MangaDatabase()
+    # db.create_user_table()
     print("Database connection opened and table checked/created.")
     # db.insert_manga({"id": 1, ...})
+    db.clear_user_likes()
     db.close()
