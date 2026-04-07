@@ -168,6 +168,19 @@ class MangaDatabase:
         self.cursor.execute("DELETE FROM user_likes")
         self.conn.commit()
 
+    def create_user_dislikes(self):
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS user_dislikes (manga_id INTEGER PRIMARY KEY)")
+        self.conn.commit()
+    def add_user_dislike(self, manga_id):
+        self.cursor.execute("INSERT OR IGNORE INTO user_dislikes (manga_id) VALUES (?)", (manga_id,))
+        self.conn.commit()
+    def get_user_dislikes(self):
+        self.cursor.execute("SELECT manga_id FROM user_dislikes")
+        return [row[0] for row in self.cursor.fetchall()]
+    def clear_user_dislikes(self):
+        self.cursor.execute("DELETE FROM user_dislikes")
+        self.conn.commit()
+
     DB_PATH = "manga.db"
 
     @staticmethod

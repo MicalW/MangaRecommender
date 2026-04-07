@@ -139,8 +139,12 @@ async def get_user_recommendations(limit: int = 10):
 
     db = MangaDatabase()
     user_likes = db.get_user_likes()
+    user_dislikes = db.get_user_dislikes()
     
     if not user_likes:
+        db.close()
+        return {"recommendations": [], "count": 0}
+    elif user_dislikes:
         db.close()
         return {"recommendations": [], "count": 0}
 
@@ -193,5 +197,76 @@ async def get_user_recommendations(limit: int = 10):
     db.close()
     return {"recommendations": results, "count": len(results)}
 
+@app.post("/user/dislike/{manga_id}", tags = ["User"])
+async def dislike_manga(manga_id: int):
+    db = MangaDatabase()
+    db.create_user_dislikes()
+    user_dislikes = db.get_user_dislikes()
+    db.close()
+    return {"message": "Manga disliked successfully", "manga_id": manga_id}
+
+@app.get("/manga/queue", response_model = RecommendationResponse, tags = ["Manga", "User"])
+async def get_manga_queue(limit: int = 10):
+    db = MangaDatabase()
+    db.create_user_table()
+    db.create_user_dislikes()
+    user_likes = db.get_user_likes()
+    user_dislikes = db.get_user_dislikes()
+    recorded_mangas = set(user_likes + user_dislikes),
+    db.close()
+    results = []
+    if embeddings_data["ids"] and user_likes is not None:
+        if not user_likes:
+            db.close()
+            return {"recommendations": [], "count": 0}
+
+    # Extract user profile from likes
+        idx = []
+        for mid in user_likes:
+            where_res = np.where(embeddings_data["ids"] == mid)[0]
+            if len(where_res) > 0:
+                idx.append(where_res[0])
+
+        if not idx:
+            db.close()
+            return {"recommendations": [], "count": 0}
+
+    # Compute user profile (mean of liked embeddings)
+        u_desc = np.mean(embeddings_data["desc_norm"][idx], axis=0)
+        u_tag = np.mean(embeddings_data["tag_norm"][idx], axis=0)
+        u_genre = np.mean(embeddings_data["genre_norm"][idx], axis=0)
+
+    # Normalize profile
+        u_desc_norm = u_desc / (np.linalg.norm(u_desc) + 1e-9)
+        u_tag_norm = u_tag / (np.linalg.norm(u_tag) + 1e-9)
+        u_genre_norm = u_genre / (np.linalg.norm(u_genre) + 1e-9)
+
+    # Get recommendation indices
+        sorted_indices = get_recommendations(
+            embeddings_data["desc_norm"],
+            embeddings_data["tag_norm"],
+            embeddings_data["genre_norm"],
+            u_desc_norm,
+            u_tag_norm,
+            u_genre_norm,
+            user_likes,
+            embeddings_data["ids"]
+        )
+    
+        recommended_ids = embeddings_data["ids"][sorted_indices[:limit]]
+    
+        results = []
+        for rid in recommended_ids:
+            m = db.get_manga_by_id(int(rid))
+            if m:
+                results.append({
+                    "id": m[0],
+                    "title_english": m[1],
+                    "title_romaji": m[2],
+                    "image": m[4]
+                })
+    
+        db.close()
+        return {"recommendations": results, "count": len(results)}
 if __name__ == "__main__":
     uvicorn.run("main:app", host="[IP_ADDRESS]", port=8000, reload=True)
