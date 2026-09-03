@@ -49,7 +49,15 @@ def build_manga_embedding(model, manga_genre_dict: dict, manga_tag_dict: dict, m
     tag_embeddings = model.encode(list(manga_tag_dict.values()), batch_size=32, show_progress_bar=True)
     description_embeddings = model.encode(list(manga_description_dict.values()), batch_size=32, show_progress_bar=True)
     ids = list(manga_genre_dict.keys())
-    np.savez("data/embeddings.npz", ids=ids, genre_embeddings=genre_embeddings, tag_embeddings=tag_embeddings, description_embeddings=description_embeddings)
+    data_dir = Path(__file__).parent.parent / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    np.savez(
+        data_dir / "embeddings.npz",
+        ids=ids,
+        genre_embeddings=genre_embeddings,
+        tag_embeddings=tag_embeddings,
+        description_embeddings=description_embeddings,
+    )
     
     
 

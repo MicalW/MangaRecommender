@@ -1,9 +1,12 @@
 import sqlite3
+from pathlib import Path
 
 class MangaDatabase:
-    def __init__(self, db_path='data/manga.db'):
-        self.conn = sqlite3.connect(db_path)
-        # Włączenie obsługi kluczy obcych (wymagane dla ON DELETE CASCADE)
+    def __init__(self, db_path=None):
+        if db_path is None:
+            db_path = Path(__file__).parent.parent / "data" / "manga.db"
+
+        self.conn = sqlite3.connect(str(db_path))
         self.conn.execute('PRAGMA foreign_keys = ON;')
         self.cursor = self.conn.cursor()
         self.create_table()
@@ -55,19 +58,23 @@ class MangaDatabase:
                 FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE
             )
         ''')
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS user_likes (manga_id INTEGER PRIMARY KEY)"
+        )
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS user_dislikes (manga_id INTEGER PRIMARY KEY)"
+        )
         self.conn.commit()
     
     def insert_manga(self, manga_data):
         manga_id = manga_data.get('id')
         
-        # Wyciągnij najlepszy dostępny tytuł (romaji jako domyślny, ewentualnie angielski)
         title_data = manga_data.get('title', {})
         title_english = title_data.get('english') or title_data.get('romaji') or 'Unknown'
         title_romaji = title_data.get('romaji') or title_data.get('english') or 'Unknown'
         
         description = manga_data.get('description', '')
         
-        # Pobierz link do dużej okładki
         cover_image = manga_data.get('coverImage', {}).get('large', '')
 
         # 1. Wstawienie/Aktualizacja mangi (bez kolumny tags)
@@ -84,14 +91,10 @@ class MangaDatabase:
             if not tag_name:
                 continue
             
-            # Wstaw tag jeśli nie istnieje
+
             self.cursor.execute('INSERT OR IGNORE INTO tags (name) VALUES (?)', (tag_name,))
-            # Pobierz ID taga: użyj lastrowid, a jeśli INSERT został zignorowany, wykonaj SELECT
-            tag_id = self.cursor.lastrowid
-            if not tag_id:
-                self.cursor.execute('SELECT id FROM tags WHERE name = ?', (tag_name,))
-                tag_id = self.cursor.fetchone()[0]
-            # Połącz mangę z tagiem w tabeli łączącej
+            self.cursor.execute('SELECT id FROM tags WHERE name = ?', (tag_name,))
+            tag_id = self.cursor.fetchone()[0]
             self.cursor.execute(
                 'INSERT OR IGNORE INTO manga_tags (manga_id, tag_id, rank) VALUES (?, ?, ?)',
                 (manga_id, tag_id, tag_rank),
@@ -100,11 +103,8 @@ class MangaDatabase:
         genres_list = manga_data.get('genres') or []
         for genre in genres_list:
             self.cursor.execute('INSERT OR IGNORE INTO genres (name) VALUES (?)', (genre,))
-            # Pobierz ID gatunku: użyj lastrowid, a jeśli INSERT został zignorowany, wykonaj SELECT
-            genre_id = self.cursor.lastrowid
-            if not genre_id:
-                self.cursor.execute('SELECT id FROM genres WHERE name = ?', (genre,))
-                genre_id = self.cursor.fetchone()[0]
+            self.cursor.execute('SELECT id FROM genres WHERE name = ?', (genre,))
+            genre_id = self.cursor.fetchone()[0]
             self.cursor.execute(
                 'INSERT OR IGNORE INTO manga_genres (manga_id, genre_id) VALUES (?, ?)',
                 (manga_id, genre_id),
@@ -161,6 +161,9 @@ class MangaDatabase:
     def add_user_like(self, manga_id):
         self.cursor.execute("INSERT OR IGNORE INTO user_likes (manga_id) VALUES (?)", (manga_id,))
         self.conn.commit()
+    def remove_user_like(self, manga_id):
+        self.cursor.execute("DELETE FROM user_likes WHERE manga_id = ?", (manga_id,))
+        self.conn.commit()
     def get_user_likes(self):
         self.cursor.execute("SELECT manga_id FROM user_likes")
         return [row[0] for row in self.cursor.fetchall()]
@@ -174,6 +177,16 @@ class MangaDatabase:
     def add_user_dislike(self, manga_id):
         self.cursor.execute("INSERT OR IGNORE INTO user_dislikes (manga_id) VALUES (?)", (manga_id,))
         self.conn.commit()
+    def remove_user_dislike(self, manga_id):
+        self.cursor.execute("DELETE FROM user_dislikes WHERE manga_id = ?", (manga_id,))
+        self.conn.commit()
+    def set_global_reaction(self, manga_id, liked):
+        """Save one global reaction; a manga can belong to only one list."""
+        target_table = "user_likes" if liked else "user_dislikes"
+        other_table = "user_dislikes" if liked else "user_likes"
+        self.cursor.execute(f"DELETE FROM {other_table} WHERE manga_id = ?", (manga_id,))
+        self.cursor.execute(f"INSERT OR IGNORE INTO {target_table} (manga_id) VALUES (?)", (manga_id,))
+        self.conn.commit()
     def get_user_dislikes(self):
         self.cursor.execute("SELECT manga_id FROM user_dislikes")
         return [row[0] for row in self.cursor.fetchall()]
@@ -181,17 +194,15 @@ class MangaDatabase:
         self.cursor.execute("DELETE FROM user_dislikes")
         self.conn.commit()
 
-    DB_PATH = "manga.db"
+    # DB_PATH = "manga.db"
 
     @staticmethod
     def get_connection():
-        return sqlite3.connect(MangaDatabase.DB_PATH)
+        db_path = Path(__file__).parent.parent / "data" / "manga.db"
+        return sqlite3.connect(str(db_path))
 
-# Przykładowe użycie (gdy odpalimy plik bezpośrednio)
 if __name__ == '__main__':
     db = MangaDatabase()
-    # db.create_user_table()
     print("Database connection opened and table checked/created.")
-    # db.insert_manga({"id": 1, ...})
     db.clear_user_likes()
     db.close()
