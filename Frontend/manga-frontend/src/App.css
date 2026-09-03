@@ -1,0 +1,249 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 30px;
+  text-align: center;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+header h1 {
+  margin-bottom: 5px;
+  font-size: 40px;
+}
+
+header p {
+  margin-top: 0;
+  opacity: 0.7;
+}
+
+.navigation {
+  display: flex;
+  gap: 10px;
+}
+
+.navigation button {
+  border: 1px solid #d7d7d7;
+  border-radius: 8px;
+  background: white;
+  padding: 9px 14px;
+  cursor: pointer;
+}
+
+.navigation button.active {
+  background: #2ecc71;
+  border-color: #2ecc71;
+  color: white;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.card {
+  width: 380px;
+  max-width: 90vw;
+  border-radius: 20px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  text-align: left;
+}
+
+.manga-image {
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+}
+
+.card-info {
+  padding: 20px;
+}
+
+.card-info h2 {
+  margin: 0 0 10px;
+  font-size: 28px;
+}
+
+.genres {
+  font-weight: bold;
+  opacity: 0.7;
+}
+
+.buttons {
+  display: flex;
+  gap: 40px;
+  margin-top: 25px;
+}
+
+.buttons button {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.skip {
+  color: #e74c3c;
+}
+
+.like {
+  color: #2ecc71;
+}
+
+.buttons button:hover {
+  transform: scale(1.1);
+}
+
+.buttons button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+  transform: none;
+}
+
+.profile-page {
+  max-width: 900px;
+  margin: 45px auto 0;
+  text-align: left;
+}
+
+.clear-profile,
+.details-button,
+.back-button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.clear-profile {
+  background: #e74c3c;
+  color: white;
+}
+
+.details-button {
+  background: #f0f0f0;
+}
+
+.profile-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.profile-section {
+  padding: 20px;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.profile-section h3 {
+  margin-top: 0;
+}
+
+.profile-manga-list {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-manga {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  padding: 6px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-manga:hover {
+  background: #f4f4f4;
+}
+
+.profile-manga img {
+  width: 45px;
+  height: 64px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.details-page {
+  max-width: 900px;
+  margin: 40px auto 0;
+  text-align: left;
+}
+
+.back-button {
+  margin-bottom: 20px;
+  background: #f0f0f0;
+}
+
+.details-card {
+  display: grid;
+  grid-template-columns: minmax(180px, 280px) 1fr;
+  gap: 30px;
+  padding: 25px;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.details-card > img {
+  width: 100%;
+  max-height: 400px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.romaji {
+  opacity: 0.65;
+}
+
+.description {
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+@media (max-width: 600px) {
+  .app-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .details-card {
+    grid-template-columns: 1fr;
+  }
+
+  .details-card > img {
+    max-width: 280px;
+  }
+}

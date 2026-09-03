@@ -11,7 +11,7 @@ import uvicorn
 sys.path.append(str(Path(__file__).parent.parent))
 
 from database.database import MangaDatabase
-from model.model import get_recommendations, load_manga_embeddings
+from MangaRecommender.backend.model.model import get_recommendations, load_manga_embeddings
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
