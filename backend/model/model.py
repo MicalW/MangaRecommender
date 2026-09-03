@@ -62,33 +62,30 @@ def get_weight(score_desc, score_tag, score_genre, liked_ids, all_ids, w_desc = 
     
 
     
+def load_manga_embeddings(file_path):
+    """Loads and normalizes embeddings from a .npz file."""
+    data = np.load(file_path)
+    ids = data["ids"]
+    
+    desc = data["description_embeddings"]
+    genre = data["genre_embeddings"]
+    tag = data["tag_embeddings"]
+
+    # Pre-normalize for faster similarity calculation
+    desc_norm = desc / (np.linalg.norm(desc, axis=1, keepdims=True) + 1e-9)
+    genre_norm = genre / (np.linalg.norm(genre, axis=1, keepdims=True) + 1e-9)
+    tag_norm = tag / (np.linalg.norm(tag, axis=1, keepdims=True) + 1e-9)
+
+    return ids, desc_norm, genre_norm, tag_norm
 
 if __name__ == "__main__":
-    
-    embeddings = np.load("data/embeddings.npz")
-    ids = embeddings["ids"]
-    genre_embeddings = embeddings["genre_embeddings"]
-    tag_embeddings = embeddings["tag_embeddings"]
-    description_embeddings = embeddings["description_embeddings"]
+    embeddings_path = "data/embeddings.npz"
+    ids, description_embeddings_norm, genre_embeddings_norm, tag_embeddings_norm = load_manga_embeddings(embeddings_path)
 
     db = MangaDatabase()
-    db.create_user_table() # Opcjonalnie, żeby mieć pewność, że tabela istnieje
+    db.create_user_table()
     user_liked_manga_ids = db.get_user_likes()
     db.close()
-
-    # if(not user_liked_manga_ids.empty):
-    #     idx = [np.where(ids == mid)[0][0] for mid in user_liked_manga_ids]
-    #     user_desc_embedding = np.mean(description_embeddings[idx], axis=0)
-    #     user_tag_embedding = np.mean(tag_embeddings[idx], axis=0)
-    #     user_genre_embedding = np.mean(genre_embeddings[idx], axis=0)
-    # else:
-    #     user_desc_embedding = np.zeros(384)
-    #     user_tag_embedding = np.zeros(384)
-    #     user_genre_embedding = np.zeros(384)
-
-    description_embeddings_norm = description_embeddings / (np.linalg.norm(description_embeddings, axis=1, keepdims=True) + 1e-9)
-    genre_embeddings_norm = genre_embeddings / (np.linalg.norm(genre_embeddings, axis=1, keepdims=True) + 1e-9)
-    tag_embeddings_norm = tag_embeddings / (np.linalg.norm(tag_embeddings, axis=1, keepdims=True) + 1e-9)
     
     sorted_indices = add_like_and_get_new_recommendations(30564, user_liked_manga_ids, ids, description_embeddings_norm, tag_embeddings_norm, genre_embeddings_norm)
     top_1_id = int(ids[sorted_indices[0]])
